@@ -17,8 +17,7 @@ body {
 }
 
 .fa {
-    color: #fff;
-    padding: 20px;
+    padding: 3px;
     font-size: 30px;
     width: 30px;
     text-align: center;
@@ -35,12 +34,14 @@ body {
 
 /* Facebook */
 .fa-facebook {
+    color: #fff;
     background: #3B5998;
 
 }
 
 /* Twitter */
 .fa-twitter {
+    color: #fff;
     background: #55ACEE;
 
 }
