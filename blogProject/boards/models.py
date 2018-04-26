@@ -15,6 +15,7 @@ import math
 class Board(models.Model):
     name = models.CharField(max_length=30, unique=True)
     description = models.CharField(max_length=100)
+    creater = models.ForeignKey(User, related_name='boards', default=None)
 
     def __str__(self):
         return self.name

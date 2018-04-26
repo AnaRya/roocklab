@@ -1,5 +1,5 @@
 from django import forms
-from .models import Topic, Post
+from .models import Topic, Post, Board
 
 
 class NewTopicForm(forms.ModelForm):
@@ -19,3 +19,15 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ['message', ]
+
+
+class NewBoardForm(forms.ModelForm):
+    description = forms.CharField(
+            widget=forms.Textarea(
+                attrs={'rows': 5, 'placeholder': "What is board's description?"}
+            ),
+            max_length=4000)
+
+    class Meta:
+        model = Board
+        fields = ['name', 'description', ]

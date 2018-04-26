@@ -40,6 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sites',
+
+    'allauth.socialaccount.providers.facebook',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
     'widget_tweaks',
     'social_django',
     'boards',
@@ -106,6 +113,7 @@ AUTHENTICATION_BACKENDS = (
     'social_core.backends.github.GithubOAuth2',
     'social_core.backends.twitter.TwitterOAuth',
 
+    'allauth.account.auth_backends.AuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -151,6 +159,37 @@ SOCIAL_AUTH_TWITTER_SECRET = '7ZPKXvX9aXBR62oplEKf1Cx2QQNG2LVVNS5rwtYRztHyMNj2VT
 SOCIAL_AUTH_FACEBOOK_KEY = '168502940643381'
 SOCIAL_AUTH_FACEBOOK_SECRET = 'd4cea338cc64aaa139b72a9ae0958307'
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = 'home'
+SITE_ID = 1
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQURIED = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email', 'public_profile', 'user_friends'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+            'first_name',
+            'last_name',
+            'verified',
+            'locale',
+            'timezone',
+            'link',
+            'gender',
+            'updated_time',
+        ],
+        'EXCHANGE_TOKEN': True,
+        'LOCALE_FUNC': 'path.to.callable',
+        'VERIFIED_EMAIL': False,
+        'VERSION': 'v2.12',
+    }
+}
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/

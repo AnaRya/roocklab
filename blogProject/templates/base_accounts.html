@@ -17,5 +17,8 @@
     </h1>
     {% block content %}
     {% endblock %}
+    {% block javascripts %}
+      <script src="{% static 'js/facebook.js' %}" charset="utf-8"></script>
+    {% endblock %}
   </div>
 {% endblock %}

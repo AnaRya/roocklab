@@ -1,6 +1,9 @@
+{% load socialaccount %}
+
 <div class="card-body text-center">
-  <a href="{% url 'social:begin' 'facebook' %}"class="btn btn-lg btn-social-icon btn-facebook ">
-    <span class="fa fa-facebook"></span>
+  <a href="{% provider_login_url 'facebook' %}" method="oauth2" class="btn btn-lg btn-social-icon btn-facebook ">
+    <span class="fa fa-facebook">
+    </span>
   </a>
 
   <a href="{% url 'social:begin' 'twitter' %}" class="btn btn-social-icon btn-lg btn-twitter">

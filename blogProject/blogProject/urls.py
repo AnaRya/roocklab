@@ -33,6 +33,8 @@ urlpatterns = [
         auth_views.LoginView.as_view(template_name='login.html'),
         name='login'),
 
+    url(r'^accounts/', include('allauth.urls')),
+
     url(r'^oauth/', include('social_django.urls', namespace='social')),
 
     url(r'^reset/$',
@@ -82,6 +84,8 @@ urlpatterns = [
         ),
 
      url(r'^new_post/$', views.NewPostView.as_view(), name='new_post'),
+
+     url(r'^new_board/$', views.new_board, name='new_board'),
 
      url(
         r'^boards/(?P<pk>\d+)/topics/(?P<topic_pk>\d+)/posts/(?P<post_pk>\d+)/edit/$',

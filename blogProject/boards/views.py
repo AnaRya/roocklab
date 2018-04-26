@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.contrib.auth.models import User
-from .forms import NewTopicForm, PostForm
+from .forms import NewTopicForm, PostForm, NewBoardForm
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Board, Topic, Post
 from django.views.generic import CreateView
@@ -21,6 +21,20 @@ class BoardListView(ListView):
     model = Board
     context_object_name = 'boards'
     template_name = 'home.html'
+
+
+@login_required
+def new_board(request):
+    if request.method == 'POST':
+        form = NewBoardForm(request.POST)
+        if form.is_valid():
+            board = form.save(commit=False)
+            board.creater = request.user
+            board.save()
+            return redirect('home')
+    else:
+        form = NewBoardForm()
+    return render(request, 'new_board.html', {'form': form})
 
 
 def board_topics(request, pk):

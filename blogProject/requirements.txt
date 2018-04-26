@@ -5,3 +5,4 @@ Markdown==2.6.11
 python-decouple==3.1
 psycopg2==2.7.1
 social-auth-app-django==2.1.0
+django-allauth==0.35.0
