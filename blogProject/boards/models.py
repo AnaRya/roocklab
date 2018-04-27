@@ -40,7 +40,7 @@ class Topic(models.Model):
     def get_page_count(self):
         count = self.posts.count()
         pages = count / 20
-        return math.ceil(pages)
+        return math.ceil(pages) + 1
 
     def has_many_pages(self, count=None):
         if count is None:
@@ -55,6 +55,9 @@ class Topic(models.Model):
 
     def get_last_ten_posts(self):
         return self.posts.order_by('-created_at')[:10]
+
+    def get_all_posts(self):
+        return self.posts.order_by('created_at')
 
 
 class Post(models.Model):

@@ -24,7 +24,6 @@ from accounts import views as accounts_views
 urlpatterns = [
     url(r'^$', views.BoardListView.as_view(), name='home'),
     url(r'^admin/', admin.site.urls),
-    url(r'^boards/(?P<pk>\d+)/$', views.TopicListView.as_view(), name='board_topics'),
     url(r'^boards/(?P<pk>\d+)/new/$', views.new_topic, name='new_topic'),
     url(r'^signup/$', accounts_views.signup, name='signup'),
     url(r'^logout/$', auth_views.LogoutView.as_view(), name='logout'),
@@ -74,7 +73,7 @@ urlpatterns = [
         ),
 
     url(r'^boards/(?P<pk>\d+)/topics/(?P<topic_pk>\d+)/$',
-        views.PostListView.as_view(),
+        views.topic_posts,
         name='topic_posts'
         ),
 
@@ -92,6 +91,6 @@ urlpatterns = [
         views.PostUpdateView.as_view(), name='edit_post'
     ),
 
+    url(r'^boards/(?P<pk>\d+)/$', views.TopicListView.as_view(), name='board_topics'),
     url(r'^settings/account/$', accounts_views.UserUpdateView.as_view(), name='my_account'),
-
 ]

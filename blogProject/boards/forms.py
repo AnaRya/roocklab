@@ -16,6 +16,11 @@ class NewTopicForm(forms.ModelForm):
 
 
 class PostForm(forms.ModelForm):
+    message = forms.CharField(
+        widget=forms.Textarea(
+            attrs={'rows': 5, 'id': 'post-text'}),
+            )
+
     class Meta:
         model = Post
         fields = ['message', ]

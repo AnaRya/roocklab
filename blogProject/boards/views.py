@@ -7,11 +7,13 @@ from .models import Board, Topic, Post
 from django.views.generic import CreateView
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views.generic import UpdateView, ListView
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 
 
 # Create your views here.
@@ -77,11 +79,6 @@ def new_topic(request, pk):
     return render(request, 'new_topic.html', {'board': board, 'form': form})
 
 
-def topic_posts(request, pk, topic_pk):
-    topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
-    return render(request, 'topic_posts.html', {'topic': topic})
-
-
 @login_required
 def reply_topic(request, pk, topic_pk):
     topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
@@ -100,7 +97,7 @@ def reply_topic(request, pk, topic_pk):
             topic_post_url = '{url}?page={page}#{id}'.format(
                 url=topic_url,
                 id=post.pk,
-                page=topic.get_page_count()
+                page=int(topic.get_page_count())
             )
 
             return redirect(topic_post_url)
@@ -109,11 +106,41 @@ def reply_topic(request, pk, topic_pk):
     return render(request, 'reply_topic.html', {'topic': topic, 'form': form})
 
 
+@login_required
 def topic_posts(request, pk, topic_pk):
     topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
-    topic.views += 1
-    topic.save()
-    return render(request, 'topic_posts.html', {'topic': topic})
+    if request.method == 'POST':
+        data = dict()
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.topic = topic
+            post.created_by = request.user
+            post.save()
+
+            topic.last_updated = timezone.now()
+            topic.save()
+
+            data['form_is_valid'] = True
+        else:
+            data['form_is_valid'] = False
+
+        context = {'post': post}
+
+        data['html_form'] = render_to_string('includes/post.html',
+                                             context=context,
+                                             request=request)
+        return JsonResponse(data)
+            # topic_url = reverse('topic_posts', kwargs={'pk': pk, 'topic_pk': topic_pk})
+            # topic_post_url = '{url}?page={page}#{id}'.format(
+            #     url=topic_url,
+            #     id=post.pk,
+            #     page=int(topic.get_page_count())
+            # )
+
+    else:
+        form = PostForm()
+    return render(request, 'topic_posts.html', {'topic': topic, 'form': form})
 
 
 class NewPostView(CreateView):
@@ -158,25 +185,36 @@ class TopicListView(ListView):
         queryset = self.board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
         return queryset
 
-
-class PostListView(ListView):
-    model = Post
-    context_object_name = 'posts'
-    template_name = 'topic_posts.html'
-    paginate_by = 20
-
-    def get_context_data(self, **kwargs):
-
-        session_key = 'viewed_topic_{}'.format(self.topic.pk)  # <-- here
-        if not self.request.session.get(session_key, False):
-            self.topic.views += 1
-            self.topic.save()
-            self.request.session[session_key] = True           # <-- until here
-
-        kwargs['topic'] = self.topic
-        return super(PostListView, self).get_context_data(**kwargs)
-
-    def get_queryset(self):
-        self.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
-        queryset = self.topic.posts.order_by('created_at')
-        return queryset
+# CBV for topic_posts
+# class PostListView(ListView):
+#     model = Post
+#     context_object_name = 'posts'
+#     template_name = 'topic_posts.html'
+#
+#     paginate_by = 20
+#
+#     def get_context_data(self, **kwargs):
+#
+#         session_key = 'viewed_topic_{}'.format(self.topic.pk)  # <-- here
+#         if not self.request.session.get(session_key, False):
+#             self.topic.views += 1
+#             self.topic.save()
+#             self.request.session[session_key] = True           # <-- until here
+#
+#         kwargs['topic'] = self.topic
+#         return super(PostListView, self).get_context_data(**kwargs)
+#
+#     def get_queryset(self):
+#         self.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
+#         queryset = self.topic.posts.order_by('created_at')
+#         return queryset
+#
+#     def form_valid(self, form):
+#         self.post = form.save(commit=False)
+#         self.post.topic = self.topic
+#         self.post.created_by = self.request.user
+#         self.post.save()
+#
+#         self.topic.last_updated = timezone.now()
+#         self.topic.save()
+#         return redirect('topic_posts', pk=self.post.topic.board.pk, topic_pk=self.post.topic.pk)
