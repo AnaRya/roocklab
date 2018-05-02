@@ -17,7 +17,7 @@
 
     {% block body %}
       <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
-        <div class="container">
+        <div class="container-fluid">
           <a class="navbar-brand" href="{% url 'home' %}">Django Boards</a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainMenu" aria-controls="mainMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -52,6 +52,7 @@
           {% block breadcrumb %}
           {% endblock %}
         </ol>
+
         {% block content %}
         {% endblock %}
       </div>
@@ -59,10 +60,15 @@
       <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
       <script src="{% static 'js/popper.min.js' %}"></script>
       <script src="{% static 'js/bootstrap.min.js' %}"></script>
+      <script src="{% static 'js/jquery.waypoints.min.js' %}"></script>
+      <script src="{% static 'js/infinite.min.js' %}"></script>
 
     {% block javascript %}
     {% endblock %}
 
+
     {% endblock body %}
+
+
   </body>
 </html>

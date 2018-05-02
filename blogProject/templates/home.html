@@ -1,52 +1,34 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block breadcrumb %}
-  <li class="breadcrumb-item active">Boards</li>
+  <li class=" breadcrumb-item active">Boards</li>
+{% endblock %}
+
+{% block stylesheet %}
+  <link rel="stylesheet" href="{% static 'css/boards.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="mb-4">
-  <a href="{% url 'new_board' %}" class="btn btn-primary">Create new</a>
+  <a href ='#' data-url="{% url 'create_board' %}" method='GET' class="btn btn-primary js-get-create-form">Create new</a>
 </div>
-  <table class="table">
-    <thead class="thead-inverse">
-      <tr>
-        <th>Board</th>
-        <th>Posts</th>
-        <th>Topics</th>
-        <th>Last Post</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for board in boards %}
-        <tr>
-          <td>
-            <a href="{% url 'board_topics' board.pk %}">{{ board.name }}</a>
-            <small class="text-muted d-block">{{ board.description }}</small>
-          </td>
-          <td class="align-middle">
-            {{ board.get_posts_count }}
-          </td>
-          <td class="align-middle">
-            {{ board.topics.count }}
-          </td>
-          <td class="align-middle">
-            {% with post=board.get_last_post %}
-              {% if post %}
-                <small>
-                  <a href="{% url 'topic_posts' board.pk post.topic.pk %}">
-                    By {{ post.created_by.username }} at {{ post.created_at }}
-                  </a>
-                </small>
-              {% else %}
-                <small class="text-muted">
-                  <em>No posts yet.</em>
-                </small>
-              {% endif %}
-            {% endwith %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="container-fluid">
+
+</div>
+<div class="w-75 d-inline-block">
+  {% include 'includes/boards.html' %}
+</div>
+<div class="w-30 d-inline-block">
+   {% include 'includes/history.html' %}
+</div>
+</div>
+  <div class="modal fade" id="modal-board">
+  <div class="modal-dialog">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block javascript %}
+  <script src={% static "js/blog/board.js" %}></script>
 {% endblock %}

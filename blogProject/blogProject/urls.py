@@ -84,7 +84,11 @@ urlpatterns = [
 
      url(r'^new_post/$', views.NewPostView.as_view(), name='new_post'),
 
-     url(r'^new_board/$', views.new_board, name='new_board'),
+     url(r'^board/create/$', views.create_board, name='create_board'),
+
+     url(r'^board/(?P<pk>\d+)/edit$', views.edit_board, name='edit_board'),
+
+     url(r'^board/(?P<pk>\d+)/delete$', views.delete_board, name='delete_board'),
 
      url(
         r'^boards/(?P<pk>\d+)/topics/(?P<topic_pk>\d+)/posts/(?P<post_pk>\d+)/edit/$',

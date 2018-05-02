@@ -1,30 +1,28 @@
-$(function() {
-  var savePost = function (event) {
+$(document).on('submit', ".js-create-post-form", function (event) {
     var form = $(this);
     $.ajax({
       url: form.attr('data-url'),
       data: form.serialize(),
       type: form.attr('method'),
       dataType: 'json',
-      beforeSend: function() {
-        $('#post-text').val('');
-        alert("Function beforeSend");
-      },
       success: function (data) {
-        $('#post-text')[0].value ='';
         if (data.form_is_valid) {
-          event.preventDefault();
-          $('#post-text').val('');
-          alert("Post created!");
+          simplemde.value('');
+          $("#all_post").html(data.html_new_posts);
         }
-        else {
-          alert("Sorry!");
-        }
+        $(".ajax_form").html(data.html_form);
+        simplemde = new SimpleMDE();
+       },
+  });
+    return false
+ }
+);
+    var infinite = new Waypoint.Infinite({
+      element: $('.infinite-container')[0],
+      onBeforePageLoad: function () {
+        $('.loading').show();
       },
+      onAfterPageLoad: function ($items) {
+        $('.loading').hide();
+      }
     });
-  return false
-};
-
-$(".js-create-post-form").submit(savePost);
-
-});

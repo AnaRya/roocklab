@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.contrib.auth.models import User
-from .forms import NewTopicForm, PostForm, NewBoardForm
+from .forms import NewTopicForm, PostForm, BoardForm
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Board, Topic, Post
 from django.views.generic import CreateView
@@ -14,9 +14,25 @@ from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.contrib import messages
 
 
 # Create your views here.
+
+def get_pages(request, queryset):
+    paginator = Paginator(queryset, 20)
+    page = request.GET.get('page', 1)
+    try:
+        pages = paginator.page(page)
+    except PageNotAnInteger:
+        # fallback to the first page
+        pages = paginator.page(1)
+    except EmptyPage:
+        # probably the user tried to add a page number
+        # in the url, so we fallback to the last page
+        page = request.GET.get('page', 1)
+        pages = paginator.page(paginator.num_pages)
+    return pages
 
 
 class BoardListView(ListView):
@@ -25,18 +41,66 @@ class BoardListView(ListView):
     template_name = 'home.html'
 
 
-@login_required
-def new_board(request):
+def save_board_form(request, form, template_name, event):
+    data = dict()
     if request.method == 'POST':
-        form = NewBoardForm(request.POST)
         if form.is_valid():
             board = form.save(commit=False)
             board.creater = request.user
             board.save()
-            return redirect('home')
+            data['form_is_valid'] = True
+            if event == 'create':
+                messages.success(request, '{} board created!'.format(board.name))
+            elif event == 'edit':
+                messages.info(request, 'Changes in {} saved!'.format(board.name))
+            boards = Board.objects.all()
+            data['html_board_list'] = render_to_string('includes/boards.html', {
+                'boards': boards},
+                request=request)
+        else:
+            data['form_is_valid'] = False
+    context = {'form': form}
+    data['html_form'] = render_to_string(template_name, context, request=request)
+    return JsonResponse(data)
+
+
+@login_required
+def create_board(request):
+    if request.method == 'POST':
+        form = BoardForm(request.POST)
     else:
-        form = NewBoardForm()
-    return render(request, 'new_board.html', {'form': form})
+        form = BoardForm()
+    return save_board_form(request=request, form=form, template_name='includes/modal_form.html', event='create')
+
+
+@login_required
+def edit_board(request, pk):
+    board = get_object_or_404(Board, pk=pk)
+    if request.method == 'POST':
+        form = BoardForm(request.POST, instance=board)
+    else:
+        form = BoardForm(instance=board)
+    return save_board_form(request=request, form=form, template_name='includes/modal_edit_form.html', event='edit')
+
+
+@login_required
+def delete_board(request, pk):
+    board = get_object_or_404(Board, pk=pk)
+    data = dict()
+    if request.method == 'POST':
+        board.delete()
+        data['form_is_valid'] = True
+        boards = Board.objects.all()
+        messages.error(request, 'Board {} deleted!'.format(board.name))
+        data['html_board_list'] = render_to_string('includes/boards.html', {
+            'boards': boards},
+            request=request)
+    else:
+        context = {'board': board}
+        data['html_form'] = render_to_string('includes/modal_delete_form.html',
+                                             context=context,
+                                             request=request)
+    return JsonResponse(data)
 
 
 def board_topics(request, pk):
@@ -121,26 +185,34 @@ def topic_posts(request, pk, topic_pk):
             topic.last_updated = timezone.now()
             topic.save()
 
+            queryset = topic.posts.order_by('created_at')
+            posts = get_pages(request, queryset)
+
+            context = {'topic': topic, 'posts': posts}
+
+            data['html_new_posts'] = render_to_string('includes/posts.html',
+                                                      context=context,
+                                                      request=request)
+
             data['form_is_valid'] = True
+            form = PostForm()
         else:
             data['form_is_valid'] = False
 
-        context = {'post': post}
+        context = {'topic': topic, 'form': form}
 
-        data['html_form'] = render_to_string('includes/post.html',
+        data['html_form'] = render_to_string('includes/form.html',
                                              context=context,
                                              request=request)
+
         return JsonResponse(data)
-            # topic_url = reverse('topic_posts', kwargs={'pk': pk, 'topic_pk': topic_pk})
-            # topic_post_url = '{url}?page={page}#{id}'.format(
-            #     url=topic_url,
-            #     id=post.pk,
-            #     page=int(topic.get_page_count())
-            # )
 
     else:
         form = PostForm()
-    return render(request, 'topic_posts.html', {'topic': topic, 'form': form})
+
+    queryset = topic.posts.order_by('created_at')
+    posts = get_pages(request, queryset)
+    return render(request, 'topic_posts.html', {'topic': topic, 'posts': posts, 'form': form})
 
 
 class NewPostView(CreateView):

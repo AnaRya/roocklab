@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from django.contrib.messages import constants as MESSAGES
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -102,6 +103,15 @@ DATABASES = {
         'PORT': 5432,
 
     }
+}
+
+
+MESSAGE_TAGS = {
+    MESSAGES.DEBUG: 'alert-info',
+    MESSAGES.INFO: 'alert-info',
+    MESSAGES.SUCCESS: 'alert-success',
+    MESSAGES.WARNING: 'alert-warning',
+    MESSAGES.ERROR: 'alert-danger',
 }
 
 

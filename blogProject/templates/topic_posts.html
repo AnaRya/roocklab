@@ -20,15 +20,18 @@
     <div class="mb-4">
       <form method="post" class="mb-4 js-create-post-form" data-url="{{ topic_url }}" novalidate>
         {% csrf_token %}
-        {% include 'includes/form.html' %}
+        <div class="ajax_form">
+          {% include 'includes/form.html' %}
+        </div>
         <button type="submit" class="btn btn-success js-create-post">Post a reply</button>
       </form>
     </div>
 
-  {% for post in topic.get_all_posts %}
-    {% include 'includes/post.html' %}
-  {% endfor %}
-    {% include 'includes/pagination.html' %}
+<div id="all_post">
+    {% include 'includes/posts.html' %}
+</div>
+
+
  {% endblock %}
 
  {% block javascript %}
