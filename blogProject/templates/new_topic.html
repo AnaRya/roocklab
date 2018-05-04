@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{%
 {% load widget_tweaks %}
 
 {% block title %}Start a New Topic{% endblock %}
@@ -11,9 +11,17 @@
 {% endblock %}
 
 {% block content %}
+<div class="messages">
+  {% include "includes/messages.html" %}
+</div>
 <form method="post" novalidate>
   {% csrf_token %}
   {% include 'includes/form.html' %}
+  <div class="g-recaptcha my-3" data-sitekey="6LegC1cUAAAAADTWfgUyWeuCN3hCMEPNtS9JZbZG"></div>
   <button type="submit" class="btn btn-success">Post</button>
 </form>
+{% endblock %}
+
+{% block javascript %}
+    <script src='https://www.google.com/recaptcha/api.js'></script>
 {% endblock %}

@@ -23,13 +23,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'd4179_rtzq9eve3e&#%97e)g+vnobs85@%4r4sushk9_1z%sff'
+GOOGLE_RECAPTCHA_SECRET_KEY = '6LegC1cUAAAAAJj9o6IAzsD_82y4qBQEG0ODcA9v'
 DEBUG = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost']
 
 # Application definition
 
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django.contrib.sites',
+    'rest_framework',
 
     'allauth.socialaccount.providers.facebook',
 
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     'social_django',
     'boards',
     'accounts',
+    'api',
 ]
 
 MIDDLEWARE = [

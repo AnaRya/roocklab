@@ -13,7 +13,7 @@ import math
 
 
 class Board(models.Model):
-    name = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=30)
     description = models.CharField(max_length=100)
     creater = models.ForeignKey(User, related_name='boards', default=None)
     is_deleted = models.BooleanField(default=False)
@@ -26,20 +26,6 @@ class Board(models.Model):
 
     def get_last_post(self):
         return Post.objects.filter(topic__board=self).order_by('-created_at').first()
-
-    # def set_test_data(self):
-    #     board = Board.objects.get(name='Python')
-    #     user = User.objects.first()
-    #     for i in range(100):
-    #         subject = 'Topic test #{}'.format(i)
-    #         topic = Topic.objects.create(subject=subject, board=board, starter=user)
-    #         Post.objects.create(message='Lorem ipsum...', topic=topic, created_by=user)
-    # def set_test_data(self):
-    #     topic = Topic.objects.get(subject='Topic test #99')
-    #     user = User.objects.first()
-    #     for i in range(100):
-    #         subject = 'Post test #{}'.format(i)
-    #         Post.objects.create(message=subject, topic=topic, created_by=user)
 
 
 class Topic(models.Model):
@@ -93,9 +79,9 @@ class Post(models.Model):
 
 class Action(models.Model):
     EVENT_CHOICES = (
-        ('C', 'create'),
-        ('D', 'delete'),
-        ('E', 'edit'),
+        ('add', 'create'),
+        ('del', 'delete'),
+        ('edt', 'edit'),
     )
 
     action = models.CharField(choices=EVENT_CHOICES, max_length=20)
@@ -104,6 +90,3 @@ class Action(models.Model):
 
     def __str__(self):
         return '{}-{}'.format(self.board.name, self.action)
-
-    def get_last_ten_events(self):
-        return Action.objects.all()[:10]

@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import urllib
+import urllib2
+import json
+from functools import wraps
 from django.contrib.auth.models import User
 from .forms import NewTopicForm, PostForm, BoardForm
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Board, Topic, Post
+from .models import Board, Topic, Post, Action
 from django.views.generic import CreateView
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
@@ -15,9 +19,38 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib import messages
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
 
 
 # Create your views here.
+
+def check_recaptcha(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        request.recaptcha_is_valid = None
+        if request.method == 'POST':
+            recaptcha_response = request.POST.get('g-recaptcha-response')
+            url = 'https://www.google.com/recaptcha/api/siteverify'
+            values = {
+                'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
+                'response': recaptcha_response
+            }
+            data = urllib.urlencode(values)
+            req = urllib2.Request(url, data)
+            response = urllib2.urlopen(req)
+            result = json.load(response)
+
+            if result['success']:
+                request.recaptcha_is_valid = True
+                messages.success(request, 'New topic added with success!')
+            else:
+                request.recaptcha_is_valid = False
+                messages.error(request, 'Invalid reCAPTCHA. Please try again.')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
 
 def get_pages(request, queryset):
     paginator = Paginator(queryset, 20)
@@ -38,7 +71,37 @@ def get_pages(request, queryset):
 class BoardListView(ListView):
     model = Board
     context_object_name = 'boards'
+    queryset = Board.objects.filter(is_deleted=False)
     template_name = 'home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(BoardListView, self).get_context_data(**kwargs)
+        actions = Action.objects.order_by('-created_at')[:10]
+        context['actions'] = actions
+        return context
+
+
+@receiver(post_save, sender=Board)
+def add_action_in_history(sender, instance, created, update_fields, **kwargs):
+
+    if created:
+        action = 'add'
+
+    elif update_fields is not None:
+        if 'is_deleted' in update_fields:
+            action = 'del'
+    else:
+        action = 'edt'
+
+    Action.objects.create(action=action, board=instance)
+
+
+def get_history(request):
+    data = dict()
+    actions = Action.objects.order_by('-created_at')[:10]
+    context = {'actions': actions}
+    data['history_html'] = render_to_string('includes/history.html', context, request)
+    return JsonResponse(data)
 
 
 def save_board_form(request, form, template_name, event):
@@ -49,11 +112,15 @@ def save_board_form(request, form, template_name, event):
             board.creater = request.user
             board.save()
             data['form_is_valid'] = True
+
             if event == 'create':
                 messages.success(request, '{} board created!'.format(board.name))
             elif event == 'edit':
                 messages.info(request, 'Changes in {} saved!'.format(board.name))
-            boards = Board.objects.all()
+            else:
+                messages.error(request, '{} board deleted!'.format(board.name))
+
+            boards = Board.objects.filter(is_deleted=False)
             data['html_board_list'] = render_to_string('includes/boards.html', {
                 'boards': boards},
                 request=request)
@@ -85,21 +152,21 @@ def edit_board(request, pk):
 
 @login_required
 def delete_board(request, pk):
-    board = get_object_or_404(Board, pk=pk)
     data = dict()
+    board = get_object_or_404(Board, pk=pk)
     if request.method == 'POST':
-        board.delete()
+        board.is_deleted = True
+        board.save(update_fields=['is_deleted'])
         data['form_is_valid'] = True
-        boards = Board.objects.all()
-        messages.error(request, 'Board {} deleted!'.format(board.name))
+        messages.error(request, '{} board deleted!'.format(board.name))
+        boards = Board.objects.filter(is_deleted=False)
         data['html_board_list'] = render_to_string('includes/boards.html', {
-            'boards': boards},
-            request=request)
+             'boards': boards},
+             request=request)
     else:
-        context = {'board': board}
-        data['html_form'] = render_to_string('includes/modal_delete_form.html',
-                                             context=context,
-                                             request=request)
+        data['form_is_valid'] = False
+    data['html_form'] = render_to_string('includes/modal_delete_form.html',
+                                         {'board': board}, request=request)
     return JsonResponse(data)
 
 
@@ -122,12 +189,13 @@ def board_topics(request, pk):
     return render(request, 'topics.html', {'board': board, 'topics': topics})
 
 
+@check_recaptcha
 @login_required
 def new_topic(request, pk):
     board = get_object_or_404(Board, pk=pk)
     if request.method == 'POST':
         form = NewTopicForm(request.POST)
-        if form.is_valid():
+        if form.is_valid() and request.recaptcha_is_valid:
             topic = form.save(commit=False)
             topic.board = board
             topic.starter = request.user

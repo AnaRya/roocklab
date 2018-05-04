@@ -15,7 +15,6 @@ var loadForm = function () {
   });
   return false
 };
-
 var saveForm = function () {
   var form = $(this);
   $.ajax({
@@ -26,7 +25,8 @@ var saveForm = function () {
     success: function (data) {
       if (data.form_is_valid) {
         $("#board-table").html(data.html_board_list);  // <-- Replace the table body
-        $("#modal-board").modal("hide");  // <-- Close the modal
+        $("#modal-board").modal("hide");
+        updateHistory();  // <-- Close the modal
       }
       else {
         $("#modal-board .modal-content").html(data.html_form);
@@ -36,6 +36,16 @@ var saveForm = function () {
   return false
 };
 
+var updateHistory = function() {
+  $.ajax({
+    url: '/get_history/',
+    type: 'get',
+    dataType: 'json',
+    success: function (data) {
+      $(".history-table").html(data.history_html);
+    }
+  });
+}
 
 $(document).on('click', ".js-get-create-form", loadForm);
 $("#modal-board").on('submit', ".js-create-board", saveForm);

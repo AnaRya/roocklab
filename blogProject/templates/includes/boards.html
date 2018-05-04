@@ -40,10 +40,10 @@
       {% endwith %}
     </td>
     <td>
-        <img src="{% static 'img/img_edit.png'%}" data-url='{% url 'edit_board' board.pk %}'  class='js-edit-board-form' width="30" height="30" alt="Edit">
+        <img src="{% static 'img/img_edt.png'%}" data-url='{% url 'edit_board' board.pk %}'  class='js-edit-board-form img_btn' width="30" height="30" alt="Edit">
     </td>
     <td>
-        <img src="{% static 'img/img_delete.png'%}" data-url='{% url 'delete_board' board.pk %}'  class='js-delete-board-form' width="30" height="30" alt="Delete">
+        <img src="{% static 'img/img_del.png'%}" data-url='{% url 'delete_board' board.pk %}'  class='js-delete-board-form img_btn' width="30" height="30" alt="Delete">
     </td>
   </tr>
 {% endfor %}
